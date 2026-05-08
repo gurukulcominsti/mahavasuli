@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>महा-वसुली स्मार्ट जनरेटर (मोबाईल व्हर्जन)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;700&family=Tiro+Devanagari+Marathi:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        /* --- स्क्रीनवरील डिझाईन (Mobile & PC Friendly) --- */
+        body { font-family: 'Mukta', sans-serif; background: #eef2f5; margin: 0; padding: 10px; }
+        .app-container { background: #ffffff; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); max-width: 1000px; margin: auto; overflow: hidden; border-top: 6px solid #1a237e; }
+        
+        /* Tabs (पाने) डिझाईन */
+        .tab-header { display: flex; background: #1a237e; color: white; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 120px; padding: 15px 10px; text-align: center; cursor: pointer; font-weight: bold; font-size: 15px; border-bottom: 4px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .tab-btn.active { background: #283593; border-bottom: 4px solid #ffeb3b; color: #ffeb3b; }
+        
+        .tab-content { padding: 25px 20px; display: none; }
+        .tab-content.active { display: block; }
+
+        h2 { color: #1a237e; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-top: 0; font-size: 20px; }
+        .section-title { font-size: 15px; font-weight: bold; color: white; background: #1a237e; padding: 8px 12px; border-radius: 5px; display: inline-block; margin: 20px 0 10px 0; width: 100%; box-sizing: border-box; }
+        
+        .grid-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .grid-box { flex: 1 1 100%; }
+        @media(min-width: 600px) { .grid-box { flex: 1 1 45%; } } /* PC वर २ रकाने */
+        
+        label { font-weight: bold; font-size: 14px; color: #444; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: 'Mukta', sans-serif; box-sizing: border-box; }
+        .readonly-input { background: #e8eaf6; font-weight: bold; color: #1a237e; }
+        .calc-box { background: #e0f7fa; padding: 10px; border-radius: 6px; border: 1px solid #b2ebf2; font-weight: bold; color: #006064; text-align: center; }
+
+        .upload-section { margin-bottom: 20px; padding: 15px; background: #fff8e1; border: 2px dashed #fbc02d; border-radius: 8px; text-align: center; }
+        .btn-add { background: #e3f2fd; color: #1976d2; border: 2px dashed #1976d2; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-primary { width: 100%; background: #28a745; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; margin-top: 15px; cursor: pointer; }
+        .btn-blue { background: #0056b3; }
+        .btn-orange { background: #e65100; }
+        
+        .guarantor-card { background: #f9fbe7; border: 1px solid #cddc39; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; }
+        .remove-btn { position: absolute; top: 10px; right: 10px; background: #d32f2f; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+
+        /* डेटाबेस टेबल */
+        .db-table-wrapper { overflow-x: auto; }
+        .db-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; min-width: 600px; }
+        .db-table th, .db-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .db-table th { background: #f4f7f6; color: #333; }
+
+        /* --- प्रिंटिंगचा अचूक फॉरमॅट --- */
+        .print-area-notice, .print-area-labels { display: none; }
+        
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .app-container { display: none !important; }
+            
+            /* नोटीस प्रिंट मोड */
+            body.print-mode-notice .print-area-notice { display: block; font-family: 'Tiro Devanagari Marathi', serif; font-size: 12.5pt; line-height: 1.4; color: black; }
+            /* लेबल्स प्रिंट मोड */
+            body.print-mode-labels .print-area-labels { display: block; font-family: 'Mukta', sans-serif; }
+
+            .page-break { page-break-before: always; }
+            p { margin: 8px 0; text-align: justify; text-indent: 40px; }
+            .no-indent { text-indent: 0 !important; }
+            .bold-center { font-weight: bold; text-align: center; display: block; text-indent: 0; }
+            table { width: 100%; border-collapse: collapse; }
+            td { vertical-align: top; }
+            .bold { font-weight: bold; }
+            hr.address-line { border: 0; border-top: 1.5px solid black; margin: 5px 0 10px 0; }
+            .sig-table td { text-align: center !important; text-indent: 0 !important; padding: 10px; }
+            
+            /* RPAD लेबल्स डिझाईन (Standard Envelope Size) */
+            .label-container { display: flex; flex-wrap: wrap; align-content: flex-start; }
+            .rpad-label { width: 9cm; height: 5cm; border: 1px solid #000; margin: 0.3cm; padding: 0.3cm; box-sizing: border-box; font-size: 11pt; float: left; overflow: hidden; border-radius: 5px; page-break-inside: avoid; }
+            .rpad-label p { text-indent: 0; margin: 2px 0; line-height: 1.2; }
+            .rpad-title { font-weight: bold; text-decoration: underline; margin-bottom: 5px !important; text-align: center; font-size: 12pt; }
+            
+            @page { size: A4; margin: 12mm 15mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="tab-header">
+            <div class="tab-btn active" onclick="openTab('tab1', this)">पान १: संस्था व प्रतिनिधी</div>
+            <div class="tab-btn" onclick="openTab('tab2', this)">पान २: कर्जदार व जामीनदार</div>
+            <div class="tab-btn" onclick="openTab('tab3', this)">पान ३: प्रिंट व डेटाबेस</div>
+        </div>
+
+        <div id="tab1" class="tab-content active">
+            <h2>🏛️ संस्था आणि अधिकृत व्यक्तीची माहिती</h2>
+            <div class="section-title">संस्थेचा तपशील</div>
+            <div class="grid-row">
+                <div class="grid-box"><label>संस्थेचे नाव</label><input type="text" id="inpSocName" value="श्रीराम ग्रामीण बिगरशेती सहकारी पतसंस्था मर्यादित"></div>
+                <div class="grid-box"><label>शाखेचे नाव (असल्यास)</label><input type="text" id="inpBranch" placeholder="उदा. मुख्य शाखा / कर्जत शाखा"></div>
+                <div class="grid-box" style="flex: 1 1 100%;"><label>शाखेचा संपूर्ण पत्ता</label><input type="text" id="inpSocAddr" value="गणेश पेठ, बाजारतळ, ता. कर्जत, जि. अहिल्यानगर"></div>
+            </div>
+            
+            <div class="upload-section" style="background:#e8f5e9; border-color:#4caf50;">
+                <label style="color:#2e7d32;">संस्थेचा शिक्का (Stamp) / लेटरहेड अपलोड करा (Optional)</label>
+                <input type="file" accept="image/*">
+            </div>
+
+            <div class="section-title">अधिकृत प्रतिनिधी / सही करणार</div>
+            <div class="grid-row">
+                <div class="grid-box"><label>व्यक्तीचे नाव</label><input type="text" id="inpRepName" placeholder="उदा. श्री. सतिश विठ्ठलराव देशमुख"></div>
+                <div class="grid-box">
+                    <label>पद (Designation)</label>
+                    <select id="inpRepPos">
+                        <option>व्यवस्थापक</option>
+                        <option>शाखा व्यवस्थापक</option>
+                        <option>अधिकृत प्रतिनिधी</option>
+                        <option>अधिकृत वकील</option>
+                        <option>कर्मचारी</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="openTab('tab2', document.querySelectorAll('.tab-btn')[1])">पुढे जा (Next) ➡️</button>
+        </div>
+
+        <div id="tab2" class="tab-content">
+            <h2>👤 कर्जदार आणि कर्जाची माहिती</h2>
+            
+            <div class="upload-section">
+                <h4 style="margin: 0; color: #f57f17;">📸 फोटोवरून माहिती भरा (AI Camera)</h4>
+                <input type="file" accept="image/*" multiple style="margin-top: 5px;">
+            </div>
+
+            <div class="section-title">कर्जदार व पत्ता (पिनकोड ऑटोमॅटिक - फक्त महाराष्ट्र)</div>
+            <div class="grid-row">
+                <div class="grid-box" style="flex: 1 1 100%;"><label>कर्जदाराचे पूर्ण नाव</label><input type="text" id="inpDebtor" placeholder="उदा. श्री. प्रविण मारुती राऊत"></div>
+                <div class="grid-box"><label>मु.पो. (गाव)</label><input type="text" id="inpVillage" placeholder="उदा. कर्जत" oninput="autoPin(this, 'inpPin')"></div>
+                <div class="grid-box"><label>तालुका</label><input type="text" id="inpTal" placeholder="उदा. कर्जत"></div>
+                <div class="grid-box"><label>जिल्हा</label><input type="text" id="inpDist" placeholder="उदा. अहिल्यानगर"></div>
+                <div class="grid-box"><label>पिन कोड (Edit करू शकता)</label><input type="text" id="inpPin" placeholder="४१४४०२"></div>
+            </div>
+
+            <div class="section-title">कर्जाचा तपशील व मुदत (Calculation)</div>
+            <div class="grid-row">
+                <div class="grid-box"><label>खाते क्रमांक</label><input type="text" id="inpAcc" placeholder="५४"></div>
+                <div class="grid-box">
+                    <label>कर्ज रक्कम (अंकात टाका)</label>
+                    <input type="number" id="inpAmount" placeholder="उदा. 50000" oninput="convertToWords(this.value)">
+                </div>
+                <div class="grid-box" style="flex: 1 1 100%;"><label>रक्कम (अक्षरी ऑटोमॅटिक)</label><input type="text" id="outAmountWords" class="readonly-input" readonly></div>
+            </div>
+            
+            <div class="grid-row">
+                <div class="grid-box"><label>कर्ज घेतल्याचा दिनांक</label><input type="date" id="inpLDate" onchange="calcDuration()"></div>
+                <div class="grid-box"><label>कर्ज मुदत अंतिम दिनांक</label><input type="date" id="inpDDate" onchange="calcDuration()"></div>
+                <div class="grid-box"><label>आजचा / नोटीस दिनांक</label><input type="date" id="inpNoticeDate" onchange="calcDuration()"></div>
+            </div>
+            <div class="calc-box" id="durationDisplay">एकूण कालावधी: (दिनांक निवडा)</div>
+
+            <div class="section-title">जामीनदार / सहमतीदार / भागीदार</div>
+            <div id="guarantorContainer"></div>
+            <button class="btn-add" onclick="addGuarantor()">+ नवीन व्यक्ती जोडा</button>
+            
+            <div class="grid-row" style="margin-top: 20px;">
+                <button class="btn-primary" style="background:#6c757d; flex:1;" onclick="openTab('tab1', document.querySelectorAll('.tab-btn')[0])">⬅️ मागे</button>
+                <button class="btn-primary" style="flex:2;" onclick="openTab('tab3', document.querySelectorAll('.tab-btn')[2])">डेटाबेस आणि प्रिंट ➡️</button>
+            </div>
+        </div>
+
+        <div id="tab3" class="tab-content">
+            <h2>📂 मास्टर डेटाबेस आणि प्रिंटिंग</h2>
+            
+            <button class="btn-primary btn-blue" onclick="saveData()">💾 ही फाईल सेव्ह करा</button>
+            
+            <div class="section-title">सेव्ह केलेल्या फाईल्स (बल्क प्रिंटसाठी टिक करा)</div>
+            <div class="db-table-wrapper">
+                <table class="db-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" onclick="toggleAll(this)"> सर्व</th>
+                            <th>कर्जदाराचे नाव</th>
+                            <th>रक्कम</th>
+                            <th>कृती</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dbTbody"></tbody>
+                </table>
+            </div>
+
+            <div class="grid-row" style="margin-top: 25px;">
+                <button class="btn-primary" onclick="printDocument('notice')">🖨️ फक्त नोटीस प्रिंट करा</button>
+                <button class="btn-primary btn-orange" onclick="printDocument('labels')">✉️ फक्त RPAD लेबल्स प्रिंट करा</button>
+            </div>
+        </div>
+    </div>
+
+    <template id="noticeTemplate">
+        <div class="print-area-notice">
+            <table class="no-indent">
+                <tr>
+                    <td style="text-align: left;" class="bold">नोंदणी क्र.:- R.N.ANR/KJT/RSR/CR/१३७४/१९९४-९५</td>
+                    <td style="text-align: right;" class="bold">दि. ०९/०१/१९९५</td>
+                </tr>
+            </table>
+            
+            <h2 style="text-align: center; margin: 8px 0 0 0; font-size: 16.5pt; text-indent: 0;" class="no-indent" id="pSocName">श्रीराम ग्रामीण बिगरशेती सहकारी पतसंस्था मर्यादित</h2>
+            <p style="text-align: center; margin-top: 0;" class="bold no-indent">पत्ता: <span id="pSocAddr">गणेश पेठ, बाजारतळ, ता. कर्जत, जि. अहिल्यानगर</span></p>
+            <hr class="address-line">
+            
+            <table style="margin-top: 5px;" class="no-indent">
+                <tr>
+                    <td style="text-align: left;" class="bold">जा.क्र.:- <span id="pBranch">श्रीराम</span>/वसुली/१०१/२०२६</td>
+                    <td style="text-align: right;" class="bold">दिनांक :- <span id="pNoticeDate"></span></td>
+                </tr>
+            </table>
+
+            <p class="bold-center" style="margin-top: 15px;">महाराष्ट्र सहकारी संस्था अधिनियम १९६० व सुधारणा २०१३ चे कलम १०१ व कलम ९१ अन्वये कारवाई पूर्वी</p>
+            <p class="bold-center" style="text-decoration: underline; font-size: 14pt; margin-top: 5px;">अंतिम थकबाकी मागणी नोटीस</p>
+
+            <p class="bold no-indent" style="margin-top: 15px;">प्रति,</p>
+            <p style="margin-bottom:0;" class="bold no-indent">कर्जदार: <span id="pDebtor"></span></p>
+            <p style="margin-top:0;" class="no-indent">मु.पो. <span id="pVillage"></span>, ता. <span id="pTal"></span>, जि. <span id="pDist"></span>, पिन - <span id="pPin"></span></p>
+            
+            <div id="pGuarantors" class="no-indent"></div>
+
+            <p style="margin-top: 15px;" class="bold no-indent">महोदय,</p>
+            <p>आपणास या नोटीसीने कळविण्यात येते की, आपण वरील संस्थेकडून खाते नंबर- <b id="pAcc"></b> रक्कम रु. <b id="pAmount"></b>/- (अक्षरी रुपये:- <b id="pWords"></b>) दिनांक:- <b id="pLDate"></b> ते मुदत दिनांक:- <b id="pDDate"></b> पर्यंत रोजीची सदर पतसंस्थेकडून कर्ज घेतलेले असून, या अगोदर सदर कर्ज भरण्यासाठी आपणास लेखी नोटीस बजावणी केलेली असून तसेच समक्ष तगादे देखील केले आहेत. तरी देखील आपण आपली थकबाकी भरलेली नाही.</p>
+            
+            <p>त्याअर्थी आज अखेर येणे मुद्दल कर्ज रक्कम रु. <b id="pAmount2"></b>/- व त्यावर आजपर्यंतचे होणारे व्याज (दाम दुप्पट नियमानुसार) व तसेच तेथून पुढे ते आज अखेर पर्यंतचे दंड व्याज, नोटीस खर्च, सरकारी कारवाई व इतर खर्च आपल्याकडून येणे असून कर्जाची परतफेड मुदत संपून <b id="pDuration"></b> झाले आहेत. त्यामुळे आपण थकबाकीदार झालेले आहात.</p>
+
+            <p>त्याअर्थी आपण संपूर्ण कर्जफेड मुदतीत करावयास पाहिजे होती, परंतु अद्याप कर्जफेड केलेली नाही. तसेच आपणास यापूर्वीही नोटीस देऊन वेळोवेळी लेखी व तोंडी आगावू कळवले होते, मात्र आपण या नोटिसांची दखल घेतलेली नाही. तरी सदरची नोटीस मिळाल्यापासून <b>१५ दिवसांचे आत</b> वरील नमूद केलेल्या प्रमाणे आपल्याकडील थकबाकीचा भरणा करावा.</p>
+            
+            <p class="bold no-indent" style="text-indent:0;">सदर थकबाकीचा भरणा न केल्यास आपणाविरुद्ध खालीलप्रमाणे कायदेशीर कारवाई करण्यात येईल:</p>
+            <p><b>कलम १०१ व ९१ अन्वये कारवाई:</b> महाराष्ट्र सहकारी संस्था अधिनियम १९६० व सुधारणा २०१३ चे कलम १०१ मधील तरतुदीस अनुसरून वसुली दाखला मिळणेबाबत रीतसर प्रस्ताव किंवा कलम ९१ अन्वये मा. सहकारी न्यायालयात दावा (Dispute) कर्जदार व जामीनदार यांचे विरुद्ध दाखल करून वसुलीची कारवाई करण्यात येईल.</p>
+
+            <div class="page-break"></div>
+            <p style="text-align: center; font-weight: bold; margin-top: 10px;" class="no-indent">(२)</p>
+
+            <p><b>फौजदारी कारवाई (कलम १३८):</b> कर्ज परतफेडीसाठी आपण दिलेले धनादेश (Cheques) जर अपुऱ्या निधीअभावी बँक खात्यातून परत (Bounce) आले असतील/आले, तर नेगोशिएबल इन्स्ट्रुमेंट ॲक्ट कलम १३८ अन्वये आपल्यावर फौजदारी खटला भरला जाईल, ज्यात कैद व दंडाची तरतूद आहे.</p>
+            
+            <p><b>मालमत्ता जप्ती (कलम १५६):</b> संस्थेने आपल्याविरुद्ध मा. लवाद कोर्ट यांचे १०१/९१ दाखला मिळविल्यानंतर आपणाकडून शासन नियुक्त विशेष वसुली व विक्री अधिकाऱ्यामार्फत सक्तीच्या मार्गाने जंगम व स्थावर मालमत्ता जप्त करून वसुली केली जाते, व आपणाकडून येणे रक्कम एकरकमी भरणा करून खाते बेबाक/निरंक (निल) करावे लागते.</p>
+            
+            <p>यावेळी शासकीय खर्च, वसुली अधिकारी खर्च व इतर सर्व खर्च आपणाकडून वसूल केला जातो व तो भरणे अपरिहार्य ठरते. तसेच जप्ती, लिलाव या बाबी वृत्तपत्रात जाहिरात देऊन, दवंडी देऊन केल्या जातात ही बाब आपल्या नावलौकिकास, प्रतिष्ठेस अशोभनीय असून हितावह नाही. तशी वेळ येऊ नये म्हणून आपणास अंतिम संधी म्हणून या नोटिसाद्वारे आपणाकडे असलेली थकबाकी भरणे बाबत कळवित आहोत.</p>
+
+            <p class="no-indent"><b>■ संबंधित व्यक्तींसाठी विशेष कायदेशीर सूचना:</b><br>भारतीय करार कायदा आणि सहकार कायद्यानुसार, कर्जाची परतफेड करण्याची जेवढी जबाबदारी मुख्य कर्जदाराची आहे, तेवढीच सामूहिक आणि वैयक्तिक जबाबदारी (Joint and Several Liability) जामीनदार, सहमत्तीदार आणि भागीदार म्हणून आपलीही आहे. मुख्य कर्जदाराने कर्ज न भरल्यास, सदर रक्कम आपल्याकडून वसूल करण्याचा पूर्ण कायदेशीर अधिकार संस्थेला आहे.</p>
+            
+            <p>तरी वरील मुदतीत थकबाकी भरून आपले खाते बेबाक/निरंक (निल) करावे अन्यथा नाईलाजास्तव संस्थेला कायदेशीर दावा दाखल करून वसुलीची कारवाई करावी लागेल कृपया याची नोंद घ्यावी. सदरचे नोटीस खर्च आपले कर्ज खाती नावे टाकण्यात आला आहे.</p>
+
+            <table class="sig-table" style="width: 100%; border: none; margin-top: 40px;">
+                <tr>
+                    <td style="width: 50%;">
+                        <br><b>श्रीमहेश सुधाकर जाधव</b><br><b>विशेष वसूली व विक्री अधिकारी</b><br>"महाराष्ट्र सहकारी संस्था अधिनियम १९६० चे कलम १५६ व नियम १९६१ चे नियम १०७ (३) अन्वये"</b><br><b>द्वारा - : नाशिक विभागातील नागरी ग्रामीण बिगरशेती सहकारी पतसंस्थांचे फेडरेशन, नाशिक विभाग
+                    </td>
+                    <td style="width: 50%;">
+                        <br><b id="pRepName">..........................</b><br><b id="pRepPos">व्यवस्थापक</b><br><b id="pSocSign">श्रीराम ग्रामीण बिगरशेती सह. पत. मर्या.</b><br> <span id="pSocAddrSign">गणेश पेठ, बाजारतळ, ता. कर्जत</span>
+                    </td>
+                </tr>
+            </table>
+
+            <p class="bold no-indent" style="text-decoration: underline; margin-top: 20px;">विशेष टीप :-</p>
+            <ol style="font-size: 11.5pt; text-align: justify; margin-top: 5px; padding-left: 20px;" class="no-indent">
+                <li>कलम १०१ ची कारवाई सुरू झाल्यानंतर शासकीय खर्च, अर्जाची फी, संस्थेचा नोटीस खर्च कायदेशीररीत्या आपल्याकडून वसूल करण्यात येईल.</li>
+                <li>महाराष्ट्र सहकारी संस्था १९६० चे १०१ वसुली दाखला मिळाल्यानंतर मा. विशेष वसुली अधिकारी महाराष्ट्र सहकारी संस्था कायदा कलम १५६ नियम १०७ प्रमाणे स्थावर व जंगम मालमत्तेची जप्ती व लिलाव करून वसुली करतात. हा खर्चही आपणाकडूनच वसूल केला जातो. संपूर्ण येणे बाकी एकरक्कमी भरावी लागते. कृपया याची गांभीर्याने नोंद घ्यावी.</li>
+                <li>कलम १५६ नियम १०७ प्रमाणे वसूल करताना माननीय विशेष वसुली व विक्री अधिकारी यांचे समज व नोटीस घेण्यास प्रतिबंध करणे, नाकारणे, टाळाटाळ करणे, आदेशाचा अवमान करणे, हे कायद्याने गुन्हा आहे.</li>
+                <li>वसुलीत अडथळे निर्माण करणे हा कायदेशीर गुन्हा असून दंड व कैदेच्या शिक्षेची तरतूद आहे.</li>
+                <li>कर्जदार व जामीनदार यांचेकडून वैयक्तिक व सामूहिक रीत्या वसुली करण्यात येते.</li>
+            </ol>
+            <div class="page-break"></div>
+        </div>
+    </template>
+
+    <template id="labelTemplate">
+        <div class="print-area-labels">
+            <div class="label-container" id="pLabels"></div>
+            <div class="page-break"></div>
+        </div>
+    </template>
+
+    <div id="finalOutputNotice"></div>
+    <div id="finalOutputLabels"></div>
+
+    <script>
+        // आजची तारीख सेट करणे
+        window.onload = function() {
+            let today = new Date().toISOString().split('T')[0];
+            document.getElementById('inpNoticeDate').value = today;
+            addGuarantor(); addGuarantor();
+            renderTable();
+        };
+
+        // Tabs Logic
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // जामीनदार ऍड
+        let gCount = 0;
+        function addGuarantor() {
+            gCount++;
+            let gHtml = `
+            <div class="guarantor-card" id="gCard_${gCount}">
+                <button class="remove-btn" onclick="document.getElementById('gCard_${gCount}').remove()">X काढा</button>
+                <div class="grid-row">
+                    <div class="grid-box"><select class="gRole"><option>जामीनदार</option><option>सहमतीदार</option><option>सह-कर्जदार</option><option>भागीदार</option></select></div>
+                    <div class="grid-box"><input type="text" class="gName" placeholder="संपूर्ण नाव"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-box"><input type="text" class="gVillage" placeholder="मु.पो." oninput="autoPin(this, 'gPin_${gCount}')"></div>
+                    <div class="grid-box"><input type="text" class="gTal" placeholder="तालुका"></div>
+                    <div class="grid-box"><input type="text" class="gDist" placeholder="जिल्हा"></div>
+                    <div class="grid-box"><input type="text" class="gPin" id="gPin_${gCount}" placeholder="पिन कोड"></div>
+                </div>
+            </div>`;
+            document.getElementById('guarantorContainer').insertAdjacentHTML('beforeend', gHtml);
+        }
+
+        // ऑटो पिन (महाराष्ट्र)
+        const mhPins = { "कर्जत": "४१४४०२", "अहिल्यानगर": "४१४००१", "राशीन": "४१४४०३", "जामखेड": "४१३२०१", "पुणे": "४११००१" };
+        function autoPin(el, targetId) {
+            let val = el.value.trim();
+            for(let key in mhPins) { if(val.includes(key)) { document.getElementById(targetId).value = mhPins[key]; return; } }
+        }
+
+        // अक्षरी रक्कम (Number to Words)
+        function convertToWords(num) {
+            if(!num) { document.getElementById('outAmountWords').value = ""; return; }
+            let val = parseInt(num);
+            const units = ['', 'एक', 'दोन', 'तीन', 'चार', 'पाच', 'सहा', 'सात', 'आठ', 'नऊ', 'दहा', 'अकरा', 'बारा', 'तेरा', 'चौदा', 'पंधरा', 'सोळा', 'सतरा', 'अठरा', 'एकोणीस'];
+            const tens = ['', '', 'वीस', 'तीस', 'चाळीस', 'पन्नास', 'साठ', 'सत्तर', 'ऐंशी', 'नव्वद'];
+            function toWords(n) {
+                if(n==0) return '';
+                if(n<20) return units[n];
+                if(n<100) return tens[Math.floor(n/10)] + (n%10>0 ? ' ' + units[n%10] : '');
+                if(n<1000) return units[Math.floor(n/100)] + ' शंभर ' + toWords(n%100);
+                if(n<100000) return toWords(Math.floor(n/1000)) + ' हजार ' + toWords(n%1000);
+                if(n<10000000) return toWords(Math.floor(n/100000)) + ' लाख ' + toWords(n%100000);
+                return toWords(Math.floor(n/10000000)) + ' कोटी ' + toWords(n%10000000);
+            }
+            document.getElementById('outAmountWords').value = toWords(val) + " मात्र";
+        }
+
+        // दिनांक कॅल्क्युलेशन (वर्ष, महिने, दिवस)
+        function calcDuration() {
+            let start = document.getElementById('inpLDate').value;
+            let end = document.getElementById('inpNoticeDate').value;
+            if(start && end) {
+                let d1 = new Date(start); let d2 = new Date(end);
+                if(d2 > d1) {
+                    let diff = new Date(d2 - d1);
+                    let yrs = diff.getUTCFullYear() - 1970;
+                    let mths = diff.getUTCMonth();
+                    let days = diff.getUTCDate() - 1;
+                    document.getElementById('durationDisplay').innerText = `एकूण कालावधी: ${yrs} वर्षे, ${mths} महिने, ${days} दिवस`;
+                    return `${yrs} वर्षे, ${mths} महिने, ${days} दिवस`;
+                }
+            }
+            return "........";
+        }
+
+        // डेट फॉरमॅट (yyyy-mm-dd to dd/mm/yyyy)
+        function formatD(d) {
+            if(!d) return "........";
+            let pts = d.split('-'); return `${pts[2]}/${pts[1]}/${pts[0]}`;
+        }
+
+        // डेटाबेस लॉजिक
+        let db = JSON.parse(localStorage.getItem('vasuliDB')) || [];
+        function getFormData() {
+            let rec = {
+                soc: document.getElementById('inpSocName').value,
+                branch: document.getElementById('inpBranch').value,
+                socAddr: document.getElementById('inpSocAddr').value,
+                repName: document.getElementById('inpRepName').value,
+                repPos: document.getElementById('inpRepPos').value,
+                
+                debtor: document.getElementById('inpDebtor').value,
+                village: document.getElementById('inpVillage').value,
+                tal: document.getElementById('inpTal').value,
+                dist: document.getElementById('inpDist').value,
+                pin: document.getElementById('inpPin').value,
+                
+                acc: document.getElementById('inpAcc').value,
+                amount: document.getElementById('inpAmount').value,
+                words: document.getElementById('outAmountWords').value,
+                ldate: document.getElementById('inpLDate').value,
+                ddate: document.getElementById('inpDDate').value,
+                ndate: document.getElementById('inpNoticeDate').value,
+                duration: calcDuration(),
+                
+                guarantors: []
+            };
+            document.querySelectorAll('.guarantor-card').forEach(card => {
+                let name = card.querySelector('.gName').value;
+                if(name) {
+                    rec.guarantors.push({
+                        role: card.querySelector('.gRole').value,
+                        name: name,
+                        village: card.querySelector('.gVillage').value,
+                        tal: card.querySelector('.gTal').value,
+                        dist: card.querySelector('.gDist').value,
+                        pin: card.querySelector('.gPin').value
+                    });
+                }
+            });
+            return rec;
+        }
+
+        function saveData() {
+            let rec = getFormData();
+            if(!rec.debtor) { alert("कर्जदाराचे नाव आवश्यक आहे!"); return; }
+            db.push(rec);
+            localStorage.setItem('vasuliDB', JSON.stringify(db));
+            renderTable();
+            alert("फाईल सेव्ह झाली!");
+        }
+
+        function renderTable() {
+            let tb = document.getElementById('dbTbody'); tb.innerHTML = '';
+            db.forEach((r, i) => {
+                tb.innerHTML += `<tr>
+                    <td style="text-align:center"><input type="checkbox" class="db-chk" value="${i}"></td>
+                    <td><b>${r.debtor}</b></td><td>${r.amount}/-</td>
+                    <td><button onclick="db.splice(${i},1); localStorage.setItem('vasuliDB', JSON.stringify(db)); renderTable();">Del</button></td>
+                </tr>`;
+            });
+        }
+        function toggleAll(el) { document.querySelectorAll('.db-chk').forEach(c => c.checked = el.checked); }
+
+        // प्रिंटिंग इंजिन (Separate Notice and Labels)
+        function printDocument(type) {
+            let selected = Array.from(document.querySelectorAll('.db-chk:checked')).map(c => db[c.value]);
+            if(selected.length === 0) {
+                // जर टिक केले नसेल तर सध्या फॉर्ममध्ये जो डेटा आहे तो घ्या
+                selected = [getFormData()];
+            }
+
+            let noticeHtml = "";
+            let labelsHtml = "";
+
+            selected.forEach(data => {
+                // नोटीस जनरेट करणे
+                let tempN = document.createElement('div');
+                tempN.innerHTML = document.getElementById('noticeTemplate').innerHTML;
+                
+                tempN.querySelector('#pSocName').innerText = data.soc;
+                tempN.querySelector('#pSocAddr').innerText = data.socAddr;
+                tempN.querySelector('#pSocSign').innerText = data.soc;
+                tempN.querySelector('#pSocAddrSign').innerText = data.socAddr;
+                tempN.querySelector('#pBranch').innerText = data.branch || data.soc.split(' ')[0];
+                
+                tempN.querySelector('#pNoticeDate').innerText = formatD(data.ndate);
+                tempN.querySelector('#pDebtor').innerText = data.debtor;
+                tempN.querySelector('#pVillage').innerText = data.village;
+                tempN.querySelector('#pTal').innerText = data.tal;
+                tempN.querySelector('#pDist').innerText = data.dist;
+                tempN.querySelector('#pPin').innerText = data.pin;
+                
+                tempN.querySelector('#pAcc').innerText = data.acc;
+                tempN.querySelector('#pAmount').innerText = Number(data.amount).toLocaleString('en-IN');
+                tempN.querySelector('#pAmount2').innerText = Number(data.amount).toLocaleString('en-IN');
+                tempN.querySelector('#pWords').innerText = data.words;
+                tempN.querySelector('#pLDate').innerText = formatD(data.ldate);
+                tempN.querySelector('#pDDate').innerText = formatD(data.ddate);
+                tempN.querySelector('#pDuration').innerText = data.duration;
+                
+                tempN.querySelector('#pRepName').innerText = data.repName || "................";
+                tempN.querySelector('#pRepPos').innerText = data.repPos || "व्यवस्थापक";
+
+                let gListStr = "";
+                // लेबल्स जनरेट करणे (RPAD Size)
+                let makeLabel = (name, vil, tal, dist, pin) => `
+                    <div class="rpad-label">
+                        <div class="rpad-title">रजिस्टर्ड पोस्ट ए.डी. (R.P.A.D.)</div>
+                        <p class="bold">प्रति,</p>
+                        <p class="bold">${name}</p>
+                        <p>मु.पो. ${vil}, ता. ${tal}</p>
+                        <p>जि. ${dist}, पिन - ${pin}</p>
+                        <p style="margin-top:10px; font-size:10pt;"><b>प्रेषक:</b> ${data.soc}</p>
+                    </div>`;
+                
+                labelsHtml += makeLabel(data.debtor, data.village, data.tal, data.dist, data.pin);
+
+                data.guarantors.forEach((g, i) => {
+                    gListStr += `<p style="margin-bottom:0; margin-top:10px;" class="bold no-indent">${g.role} (${i+1}): <span>${g.name}</span></p>
+                                 <p style="margin-top:0;" class="no-indent">मु.पो. ${g.village}, ता. ${g.tal}, जि. ${g.dist}, पिन - ${g.pin}</p>`;
+                    labelsHtml += makeLabel(g.name, g.village, g.tal, g.dist, g.pin);
+                });
+                tempN.querySelector('#pGuarantors').innerHTML = gListStr;
+                noticeHtml += tempN.innerHTML;
+            });
+
+            document.getElementById('finalOutputNotice').innerHTML = noticeHtml;
+            
+            let tempL = document.createElement('div');
+            tempL.innerHTML = document.getElementById('labelTemplate').innerHTML;
+            tempL.querySelector('#pLabels').innerHTML = labelsHtml;
+            document.getElementById('finalOutputLabels').innerHTML = tempL.innerHTML;
+
+            // काय प्रिंट करायचे ते ठरवणे (CSS Classes)
+            document.body.className = ''; 
+            if(type === 'notice') { document.body.classList.add('print-mode-notice'); }
+            if(type === 'labels') { document.body.classList.add('print-mode-labels'); }
+
+            window.print();
+            
+            // प्रिंट झाल्यावर पूर्वस्थितीत आणणे
+            setTimeout(() => { document.body.className = ''; }, 1000);
+        }
+    </script>
+</body>
+</html>
